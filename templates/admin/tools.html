@@ -1,0 +1,51 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Tools — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+  <div>
+    <h1 class="admin-title">Tools</h1>
+    <p class="admin-sub">{{ products|length }} tools in catalog</p>
+  </div>
+  <a href="{{ url_for('admin_tool_new') }}" class="admin-btn">
+    <i class="fa-solid fa-plus"></i> Add Tool
+  </a>
+</div>
+
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Location</th>
+        <th>Price</th>
+        <th>Specs</th>
+        <th style="width:140px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td>{{ p.id }}</td>
+        <td><strong>{{ p.name }}</strong></td>
+        <td>{{ p.location }}</td>
+        <td>₵{{ "{:,}".format(p.price|int) }}</td>
+        <td class="muted">{{ p.specs }}</td>
+        <td class="actions">
+          <a href="{{ url_for('admin_tool_edit', tool_id=p.id) }}" class="icon-action edit" title="Edit">
+            <i class="fa-solid fa-pen"></i>
+          </a>
+          <form method="POST" action="{{ url_for('admin_tool_delete', tool_id=p.id) }}"
+                onsubmit="return confirm('Delete this tool?');" style="display:inline;">
+            <button type="submit" class="icon-action delete" title="Delete">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
