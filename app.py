@@ -11,15 +11,18 @@ from flask import (
 load_dotenv()
 
 # ============================================================
-# CONFIG — falls back to hardcoded values if env vars missing
+# CONFIG — hardcoded, env vars ignored
 # ============================================================
-SUPABASE_URL   = os.environ.get("SUPABASE_URL",   "https://xycpdbykppvvfdlzslca.supabase.co")
-SUPABASE_KEY   = os.environ.get("SUPABASE_KEY",   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Y3BkYnlrcHB2dmZkbHN6bGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTEyMDAsImV4cCI6MjA5MDY2NzIwMH0.b2DC8-umve3AO3KmJkDF5mnLb8wSc4vRy9aO4hNGQb4")
-SECRET_KEY     = os.environ.get("SECRET_KEY",     "advance-tools-secret-2026-change-me")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "advance2026")
+SUPABASE_URL   = "https://xycpdbykppvvfdlzslca.supabase.co"
+SUPABASE_KEY   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Y3BkYnlrcHB2dmZkbHN6bGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTEyMDAsImV4cCI6MjA5MDY2NzIwMH0.b2DC8-umve3AO3KmJkDF5mnLb8wSc4vRy9aO4hNGQb4"
+SECRET_KEY     = "advance-tools-secret-2026-change-me"
+ADMIN_PASSWORD = "advance2026"
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+
+# Debug — prints on boot so we can see it in Render logs
+print("BOOT SUPABASE_URL =", repr(SUPABASE_URL), "KEY_LEN =", len(SUPABASE_KEY))
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -363,12 +366,12 @@ def admin_comment_delete(comment_id):
 
 
 # ============================================================
-# ADMIN — PASSWORD (managed via env var)
+# ADMIN — PASSWORD (managed via hardcoded value)
 # ============================================================
 @app.route("/admin/password", methods=["POST"])
 @login_required
 def admin_password():
-    flash("Password is controlled by the ADMIN_PASSWORD environment variable.", "error")
+    flash("Password is set in app.py (ADMIN_PASSWORD constant).", "error")
     return redirect(url_for("admin_dashboard"))
 
 
