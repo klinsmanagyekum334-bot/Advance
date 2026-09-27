@@ -1,34 +1,43 @@
-import json
 import os
 import uuid
 from functools import wraps
+from dotenv import load_dotenv
+from supabase import create_client, Client
 from flask import (
     Flask, render_template, request, redirect,
     url_for, session, flash, abort
 )
 
+load_dotenv()
+
+# ============================================================
+# CONFIG — falls back to hardcoded values if env vars missing
+# ============================================================
+SUPABASE_URL   = os.environ.get("SUPABASE_URL",   "https://xycpdbykppvvfdlzslca.supabase.co")
+SUPABASE_KEY   = os.environ.get("SUPABASE_KEY",   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Y3BkYnlrcHB2dmZkbHN6bGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTEyMDAsImV4cCI6MjA5MDY2NzIwMH0.b2DC8-umve3AO3KmJkDF5mnLb8wSc4vRy9aO4hNGQb4")
+SECRET_KEY     = os.environ.get("SECRET_KEY",     "advance-tools-secret-2026-change-me")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "advance2026")
+
 app = Flask(__name__)
-app.secret_key = "change-this-secret-key-in-production"
+app.secret_key = SECRET_KEY
 
-
-@app.template_filter("goldmark")
-def goldmark(text):
-    """Convert {gold}...{/gold} markers into a gold-coloured span."""
-    if not text:
-        return ""
-    return text.replace("{gold}", '<span class="gold">').replace("{/gold}", "</span>")
-
-DATA_FILE   = os.path.join(os.path.dirname(__file__), "data.json")
-UPLOAD_DIR  = os.path.join(os.path.dirname(__file__), "static", "uploads")
-ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
-
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 PER_PAGE = 8
 
 
 # ============================================================
-# FIXED TESTIMONIALS — always shown, cannot be deleted in admin
+# GOLD MARKER FILTER  {gold}...{/gold}
+# ============================================================
+@app.template_filter("goldmark")
+def goldmark(text):
+    if not text:
+        return ""
+    return text.replace("{gold}", '<span class="gold">').replace("{/gold}", "</span>")
+
+
+# ============================================================
+# FIXED REVIEWS (kept in code, never deletable via admin)
 # ============================================================
 FIXED_REVIEWS = [
     {"name": "Joseph Appiah",    "location": "Accra",      "text": "Very genuine tools. I bought a cordless drill and it works perfectly. Highly recommended!"},
@@ -46,54 +55,6 @@ FIXED_REVIEWS = [
 # ============================================================
 # HELPERS
 # ============================================================
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        return {
-            "site": {},
-            "services": [],
-            "products": [],
-            "comments": [],
-            "admin_password": "admin",
-        }
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
-
-
-def save_uploaded_image(file_storage):
-    """Save an uploaded image; return its public URL path (/static/uploads/...)."""
-    if not file_storage or not file_storage.filename:
-        return None
-    if not allowed_file(file_storage.filename):
-        return None
-
-    ext  = file_storage.filename.rsplit(".", 1)[1].lower()
-    name = f"{uuid.uuid4().hex}.{ext}"
-    path = os.path.join(UPLOAD_DIR, name)
-    file_storage.save(path)
-    return f"/static/uploads/{name}"
-
-
-def get_uploaded_image():
-    """
-    Return the first image found across both upload inputs:
-      - image_file         → From Gallery
-      - image_file_camera  → Take Photo
-    """
-    return (
-        save_uploaded_image(request.files.get("image_file"))
-        or save_uploaded_image(request.files.get("image_file_camera"))
-    )
-
-
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -103,45 +64,109 @@ def login_required(f):
     return wrapper
 
 
+def fetch_tools():
+    try:
+        res = supabase.table("tools").select("*").order("id").execute()
+        return res.data or []
+    except Exception as e:
+        print("fetch_tools error:", e)
+        return []
+
+
+def fetch_services():
+    try:
+        res = supabase.table("services").select("*").order("sort_order").execute()
+        return res.data or []
+    except Exception as e:
+        print("fetch_services error:", e)
+        return []
+
+
+def fetch_comments():
+    try:
+        res = supabase.table("comments").select("*").order("created_at", desc=True).execute()
+        return res.data or []
+    except Exception as e:
+        print("fetch_comments error:", e)
+        return []
+
+
+def fetch_site():
+    try:
+        res = supabase.table("site_content").select("*").execute()
+        return {row["key"]: row["value"] for row in (res.data or [])}
+    except Exception as e:
+        print("fetch_site error:", e)
+        return {}
+
+
+def upload_image_to_supabase(file_storage):
+    """Upload image to Supabase Storage and return public URL."""
+    if not file_storage or not file_storage.filename:
+        return None
+
+    ext = file_storage.filename.rsplit(".", 1)[-1].lower()
+    if ext not in {"png", "jpg", "jpeg", "gif", "webp"}:
+        return None
+
+    filename = f"{uuid.uuid4().hex}.{ext}"
+
+    try:
+        supabase.storage.from_("tool-images").upload(
+            path=filename,
+            file=file_storage.read(),
+            file_options={"content-type": file_storage.mimetype or "image/jpeg"},
+        )
+        return supabase.storage.from_("tool-images").get_public_url(filename)
+    except Exception as e:
+        print("upload error:", e)
+        return None
+
+
+def get_uploaded_image():
+    return (
+        upload_image_to_supabase(request.files.get("image_file"))
+        or upload_image_to_supabase(request.files.get("image_file_camera"))
+    )
+
+
 # ============================================================
 # PUBLIC — HOME
 # ============================================================
 @app.route("/", methods=["GET", "POST"])
 def index():
-    data = load_data()
-
-    # Visitor comment submitted
     if request.method == "POST":
         name    = (request.form.get("name") or "").strip()
         comment = (request.form.get("comment") or "").strip()
         if name and comment:
-            data["comments"].insert(0, {"name": name, "text": comment})
-            save_data(data)
+            try:
+                supabase.table("comments").insert({"name": name, "text": comment}).execute()
+            except Exception as e:
+                print("comment insert error:", e)
         return redirect(url_for("index") + "#testimonials")
 
-    # Pagination
     page = request.args.get("page", 1, type=int)
     if page < 1:
         page = 1
 
-    products    = data.get("products", [])
-    total       = len(products)
-    total_pages = max(1, (total + PER_PAGE - 1) // PER_PAGE)
+    all_products = fetch_tools()
+    total        = len(all_products)
+    total_pages  = max(1, (total + PER_PAGE - 1) // PER_PAGE)
     if page > total_pages:
         page = total_pages
 
     start         = (page - 1) * PER_PAGE
-    products_page = products[start:start + PER_PAGE]
+    products_page = all_products[start:start + PER_PAGE]
 
     return render_template(
         "index.html",
-        site=data.get("site", {}),
-        services=data.get("services", []),
+        site=fetch_site(),
+        services=fetch_services(),
         products=products_page,
         page=page,
         total_pages=total_pages,
         total_tools=total,
-        visitor_comments=data.get("comments", []),
+        visitor_comments=fetch_comments(),
         fixed_reviews=FIXED_REVIEWS,
     )
 
@@ -152,9 +177,8 @@ def index():
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
-        data = load_data()
-        pwd  = request.form.get("password", "")
-        if pwd == data.get("admin_password", "admin"):
+        pwd = request.form.get("password", "")
+        if pwd == ADMIN_PASSWORD:
             session["admin_logged_in"] = True
             return redirect(url_for("admin_dashboard"))
         flash("Wrong password", "error")
@@ -173,12 +197,11 @@ def admin_logout():
 @app.route("/admin")
 @login_required
 def admin_dashboard():
-    data = load_data()
     return render_template(
         "admin/dashboard.html",
-        product_count=len(data.get("products", [])),
-        comment_count=len(data.get("comments", [])),
-        service_count=len(data.get("services", [])),
+        product_count=len(fetch_tools()),
+        comment_count=len(fetch_comments()),
+        service_count=len(fetch_services()),
     )
 
 
@@ -188,31 +211,28 @@ def admin_dashboard():
 @app.route("/admin/tools")
 @login_required
 def admin_tools():
-    data = load_data()
-    return render_template("admin/tools.html", products=data.get("products", []))
+    return render_template("admin/tools.html", products=fetch_tools())
 
 
 @app.route("/admin/tools/new", methods=["GET", "POST"])
 @login_required
 def admin_tool_new():
     if request.method == "POST":
-        data = load_data()
-
-        # Image priority: gallery upload → camera upload → URL
         uploaded = get_uploaded_image()
         image    = uploaded or request.form.get("image", "").strip()
 
-        new_id = max([p["id"] for p in data["products"]], default=0) + 1
-        data["products"].append({
-            "id":       new_id,
-            "name":     request.form.get("name", "").strip(),
-            "location": request.form.get("location", "").strip(),
-            "price":    float(request.form.get("price", 0) or 0),
-            "specs":    request.form.get("specs", "").strip(),
-            "image":    image,
-        })
-        save_data(data)
-        flash("Tool added successfully", "success")
+        try:
+            supabase.table("tools").insert({
+                "name":     request.form.get("name", "").strip(),
+                "location": request.form.get("location", "").strip(),
+                "price":    float(request.form.get("price", 0) or 0),
+                "specs":    request.form.get("specs", "").strip(),
+                "image":    image,
+            }).execute()
+            flash("Tool added successfully", "success")
+        except Exception as e:
+            flash(f"Error: {e}", "error")
+
         return redirect(url_for("admin_tools"))
 
     return render_template("admin/tool_form.html", tool=None)
@@ -221,8 +241,12 @@ def admin_tool_new():
 @app.route("/admin/tools/edit/<int:tool_id>", methods=["GET", "POST"])
 @login_required
 def admin_tool_edit(tool_id):
-    data = load_data()
-    tool = next((p for p in data["products"] if p["id"] == tool_id), None)
+    try:
+        res = supabase.table("tools").select("*").eq("id", tool_id).single().execute()
+        tool = res.data
+    except Exception:
+        tool = None
+
     if not tool:
         abort(404)
 
@@ -230,19 +254,24 @@ def admin_tool_edit(tool_id):
         uploaded = get_uploaded_image()
         url_val  = request.form.get("image", "").strip()
 
+        update_data = {
+            "name":     request.form.get("name", "").strip(),
+            "location": request.form.get("location", "").strip(),
+            "price":    float(request.form.get("price", 0) or 0),
+            "specs":    request.form.get("specs", "").strip(),
+        }
+
         if uploaded:
-            tool["image"] = uploaded
+            update_data["image"] = uploaded
         elif url_val:
-            tool["image"] = url_val
-        # else: keep existing image
+            update_data["image"] = url_val
 
-        tool["name"]     = request.form.get("name", "").strip()
-        tool["location"] = request.form.get("location", "").strip()
-        tool["price"]    = float(request.form.get("price", 0) or 0)
-        tool["specs"]    = request.form.get("specs", "").strip()
+        try:
+            supabase.table("tools").update(update_data).eq("id", tool_id).execute()
+            flash("Tool updated", "success")
+        except Exception as e:
+            flash(f"Error: {e}", "error")
 
-        save_data(data)
-        flash("Tool updated", "success")
         return redirect(url_for("admin_tools"))
 
     return render_template("admin/tool_form.html", tool=tool)
@@ -251,39 +280,39 @@ def admin_tool_edit(tool_id):
 @app.route("/admin/tools/delete/<int:tool_id>", methods=["POST"])
 @login_required
 def admin_tool_delete(tool_id):
-    data = load_data()
-    data["products"] = [p for p in data["products"] if p["id"] != tool_id]
-    save_data(data)
-    flash("Tool deleted", "success")
+    try:
+        supabase.table("tools").delete().eq("id", tool_id).execute()
+        flash("Tool deleted", "success")
+    except Exception as e:
+        flash(f"Error: {e}", "error")
     return redirect(url_for("admin_tools"))
 
 
 # ============================================================
-# ADMIN — SITE
+# ADMIN — SITE CONTENT
 # ============================================================
 @app.route("/admin/site", methods=["GET", "POST"])
 @login_required
 def admin_site():
-    data = load_data()
     if request.method == "POST":
-        data["site"].update({
-            "hero_kicker":       request.form.get("hero_kicker", "").strip(),
-            "hero_title_line1":  request.form.get("hero_title_line1", "").strip(),
-            "hero_title_line2":  request.form.get("hero_title_line2", "").strip(),
-            "hero_sub":          request.form.get("hero_sub", "").strip(),
-            "services_heading":  request.form.get("services_heading", "").strip(),
-            "products_heading":  request.form.get("products_heading", "").strip(),
-            "info_location":     request.form.get("info_location", "").strip(),
-            "info_phone":        request.form.get("info_phone", "").strip(),
-            "info_whatsapp":     request.form.get("info_whatsapp", "").strip(),
-            "info_slogan":       request.form.get("info_slogan", "").strip(),
-            "footer_blurb":      request.form.get("footer_blurb", "").strip(),
-            "footer_dev":        request.form.get("footer_dev", "").strip(),
-        })
-        save_data(data)
-        flash("Site content updated", "success")
+        fields = [
+            "hero_kicker", "hero_title_line1", "hero_title_line2", "hero_sub",
+            "services_heading", "products_heading",
+            "info_location", "info_phone", "info_whatsapp", "info_slogan",
+            "footer_blurb", "footer_dev",
+        ]
+        try:
+            for f in fields:
+                supabase.table("site_content").upsert({
+                    "key":   f,
+                    "value": request.form.get(f, "").strip(),
+                }).execute()
+            flash("Site content updated", "success")
+        except Exception as e:
+            flash(f"Error: {e}", "error")
         return redirect(url_for("admin_site"))
-    return render_template("admin/site.html", site=data["site"])
+
+    return render_template("admin/site.html", site=fetch_site())
 
 
 # ============================================================
@@ -292,18 +321,25 @@ def admin_site():
 @app.route("/admin/services", methods=["GET", "POST"])
 @login_required
 def admin_services():
-    data = load_data()
     if request.method == "POST":
         icons  = request.form.getlist("icon")
         titles = request.form.getlist("title")
-        data["services"] = [
-            {"icon": i.strip(), "title": t.strip()}
-            for i, t in zip(icons, titles) if t.strip()
-        ]
-        save_data(data)
-        flash("Services updated", "success")
+
+        try:
+            supabase.table("services").delete().neq("id", 0).execute()
+            for i, (ic, ti) in enumerate(zip(icons, titles)):
+                if ti.strip():
+                    supabase.table("services").insert({
+                        "icon":       ic.strip(),
+                        "title":      ti.strip(),
+                        "sort_order": i,
+                    }).execute()
+            flash("Services updated", "success")
+        except Exception as e:
+            flash(f"Error: {e}", "error")
         return redirect(url_for("admin_services"))
-    return render_template("admin/services.html", services=data["services"])
+
+    return render_template("admin/services.html", services=fetch_services())
 
 
 # ============================================================
@@ -312,33 +348,27 @@ def admin_services():
 @app.route("/admin/comments")
 @login_required
 def admin_comments():
-    data = load_data()
-    return render_template("admin/comments.html", comments=data.get("comments", []))
+    return render_template("admin/comments.html", comments=fetch_comments())
 
 
-@app.route("/admin/comments/delete/<int:idx>", methods=["POST"])
+@app.route("/admin/comments/delete/<int:comment_id>", methods=["POST"])
 @login_required
-def admin_comment_delete(idx):
-    data = load_data()
-    if 0 <= idx < len(data["comments"]):
-        del data["comments"][idx]
-        save_data(data)
+def admin_comment_delete(comment_id):
+    try:
+        supabase.table("comments").delete().eq("id", comment_id).execute()
         flash("Comment deleted", "success")
+    except Exception as e:
+        flash(f"Error: {e}", "error")
     return redirect(url_for("admin_comments"))
 
 
 # ============================================================
-# ADMIN — PASSWORD
+# ADMIN — PASSWORD (managed via env var)
 # ============================================================
 @app.route("/admin/password", methods=["POST"])
 @login_required
 def admin_password():
-    data = load_data()
-    new_pwd = request.form.get("new_password", "").strip()
-    if new_pwd:
-        data["admin_password"] = new_pwd
-        save_data(data)
-        flash("Password changed", "success")
+    flash("Password is controlled by the ADMIN_PASSWORD environment variable.", "error")
     return redirect(url_for("admin_dashboard"))
 
 
