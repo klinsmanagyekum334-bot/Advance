@@ -16,7 +16,7 @@
       <p class="comment-name">{{ c.name }}</p>
       <p class="comment-text">{{ c.text }}</p>
     </div>
-    <form method="POST" action="{{ url_for('admin_comment_delete', idx=loop.index0) }}"
+    <form method="POST" action="{{ url_for('admin_comment_delete', comment_id=c.id) }}"
           onsubmit="return confirm('Delete this comment?');">
       <button type="submit" class="icon-action delete" title="Delete">
         <i class="fa-solid fa-trash"></i>
