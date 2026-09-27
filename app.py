@@ -11,17 +11,16 @@ from flask import (
 load_dotenv()
 
 # ============================================================
-# CONFIG — hardcoded, env vars ignored
+# CONFIG — hardcoded
 # ============================================================
-SUPABASE_URL   = "https://xycpdbykppvvfdlzslca.supabase.co"
-SUPABASE_KEY   = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5Y3BkYnlrcHB2dmZkbHN6bGNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTEyMDAsImV4cCI6MjA5MDY2NzIwMH0.b2DC8-umve3AO3KmJkDF5mnLb8wSc4vRy9aO4hNGQb4"
+SUPABASE_URL   = "https://soeenrjxrspfsexdiuip.supabase.co"
+SUPABASE_KEY   = "sb_publishable_mYvFcs9_OSA0PTIbcj4djg_NHGB8DXC"
 SECRET_KEY     = "advance-tools-secret-2026-change-me"
 ADMIN_PASSWORD = "advance2026"
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# Debug — prints on boot so we can see it in Render logs
 print("BOOT SUPABASE_URL =", repr(SUPABASE_URL), "KEY_LEN =", len(SUPABASE_KEY))
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -29,9 +28,6 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 PER_PAGE = 8
 
 
-# ============================================================
-# GOLD MARKER FILTER  {gold}...{/gold}
-# ============================================================
 @app.template_filter("goldmark")
 def goldmark(text):
     if not text:
@@ -39,9 +35,6 @@ def goldmark(text):
     return text.replace("{gold}", '<span class="gold">').replace("{/gold}", "</span>")
 
 
-# ============================================================
-# FIXED REVIEWS (kept in code, never deletable via admin)
-# ============================================================
 FIXED_REVIEWS = [
     {"name": "Joseph Appiah",    "location": "Accra",      "text": "Very genuine tools. I bought a cordless drill and it works perfectly. Highly recommended!"},
     {"name": "Frederick Ansah",  "location": "Kumasi",     "text": "Fast delivery! I ordered in the morning and received my tools the same day. Impressive service."},
@@ -55,9 +48,6 @@ FIXED_REVIEWS = [
 ]
 
 
-# ============================================================
-# HELPERS
-# ============================================================
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -104,16 +94,12 @@ def fetch_site():
 
 
 def upload_image_to_supabase(file_storage):
-    """Upload image to Supabase Storage and return public URL."""
     if not file_storage or not file_storage.filename:
         return None
-
     ext = file_storage.filename.rsplit(".", 1)[-1].lower()
     if ext not in {"png", "jpg", "jpeg", "gif", "webp"}:
         return None
-
     filename = f"{uuid.uuid4().hex}.{ext}"
-
     try:
         supabase.storage.from_("tool-images").upload(
             path=filename,
@@ -133,9 +119,6 @@ def get_uploaded_image():
     )
 
 
-# ============================================================
-# PUBLIC — HOME
-# ============================================================
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -174,9 +157,6 @@ def index():
     )
 
 
-# ============================================================
-# ADMIN — AUTH
-# ============================================================
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -194,9 +174,6 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
-# ============================================================
-# ADMIN — DASHBOARD
-# ============================================================
 @app.route("/admin")
 @login_required
 def admin_dashboard():
@@ -208,9 +185,6 @@ def admin_dashboard():
     )
 
 
-# ============================================================
-# ADMIN — TOOLS
-# ============================================================
 @app.route("/admin/tools")
 @login_required
 def admin_tools():
@@ -223,7 +197,6 @@ def admin_tool_new():
     if request.method == "POST":
         uploaded = get_uploaded_image()
         image    = uploaded or request.form.get("image", "").strip()
-
         try:
             supabase.table("tools").insert({
                 "name":     request.form.get("name", "").strip(),
@@ -235,9 +208,7 @@ def admin_tool_new():
             flash("Tool added successfully", "success")
         except Exception as e:
             flash(f"Error: {e}", "error")
-
         return redirect(url_for("admin_tools"))
-
     return render_template("admin/tool_form.html", tool=None)
 
 
@@ -249,34 +220,27 @@ def admin_tool_edit(tool_id):
         tool = res.data
     except Exception:
         tool = None
-
     if not tool:
         abort(404)
-
     if request.method == "POST":
         uploaded = get_uploaded_image()
         url_val  = request.form.get("image", "").strip()
-
         update_data = {
             "name":     request.form.get("name", "").strip(),
             "location": request.form.get("location", "").strip(),
             "price":    float(request.form.get("price", 0) or 0),
             "specs":    request.form.get("specs", "").strip(),
         }
-
         if uploaded:
             update_data["image"] = uploaded
         elif url_val:
             update_data["image"] = url_val
-
         try:
             supabase.table("tools").update(update_data).eq("id", tool_id).execute()
             flash("Tool updated", "success")
         except Exception as e:
             flash(f"Error: {e}", "error")
-
         return redirect(url_for("admin_tools"))
-
     return render_template("admin/tool_form.html", tool=tool)
 
 
@@ -291,9 +255,6 @@ def admin_tool_delete(tool_id):
     return redirect(url_for("admin_tools"))
 
 
-# ============================================================
-# ADMIN — SITE CONTENT
-# ============================================================
 @app.route("/admin/site", methods=["GET", "POST"])
 @login_required
 def admin_site():
@@ -314,20 +275,15 @@ def admin_site():
         except Exception as e:
             flash(f"Error: {e}", "error")
         return redirect(url_for("admin_site"))
-
     return render_template("admin/site.html", site=fetch_site())
 
 
-# ============================================================
-# ADMIN — SERVICES
-# ============================================================
 @app.route("/admin/services", methods=["GET", "POST"])
 @login_required
 def admin_services():
     if request.method == "POST":
         icons  = request.form.getlist("icon")
         titles = request.form.getlist("title")
-
         try:
             supabase.table("services").delete().neq("id", 0).execute()
             for i, (ic, ti) in enumerate(zip(icons, titles)):
@@ -341,13 +297,9 @@ def admin_services():
         except Exception as e:
             flash(f"Error: {e}", "error")
         return redirect(url_for("admin_services"))
-
     return render_template("admin/services.html", services=fetch_services())
 
 
-# ============================================================
-# ADMIN — COMMENTS
-# ============================================================
 @app.route("/admin/comments")
 @login_required
 def admin_comments():
@@ -365,9 +317,6 @@ def admin_comment_delete(comment_id):
     return redirect(url_for("admin_comments"))
 
 
-# ============================================================
-# ADMIN — PASSWORD (managed via hardcoded value)
-# ============================================================
 @app.route("/admin/password", methods=["POST"])
 @login_required
 def admin_password():
@@ -375,8 +324,5 @@ def admin_password():
     return redirect(url_for("admin_dashboard"))
 
 
-# ============================================================
-# RUN
-# ============================================================
 if __name__ == "__main__":
     app.run(debug=True)
