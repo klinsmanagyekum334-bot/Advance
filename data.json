@@ -1,0 +1,194 @@
+{
+  "admin_password": "advance2026",
+  "site": {
+    "hero_kicker": "WELCOME TO",
+    "hero_title_line1": "Advance {gold}Tools{/gold}",
+    "hero_title_line2": "& Spare Parts Hub",
+    "hero_sub": "Quality tools, spare parts & hardware — delivered across Ghana.",
+    "services_heading": "Our Services",
+    "products_heading": "Tools We Sell",
+    "info_location": "Kasoa Oklu Nkwanta<br>Off Bawjiase Road",
+    "info_phone": "0241697294",
+    "info_whatsapp": "233241697294",
+    "info_slogan": "“Your trusted partner for tools & spare parts.”",
+    "footer_blurb": "We sell all kinds of tools — power tools, hand tools, hardware and industrial equipment — and we stock genuine spare parts for every brand we carry. Beyond sales, we offer professional fabrication, servicing and repair, plus reliable doorstep delivery across Ghana. Whether you are a workshop, a contractor or a DIY enthusiast, we bring you quality equipment, expert support and the best prices in the country.",
+    "footer_dev": "Developed by Ophyser — 0240044138"
+  },
+  "services": [
+    {
+      "icon": "fa-solid fa-industry",
+      "title": "Fabrication"
+    },
+    {
+      "icon": "fa-solid fa-screwdriver-wrench",
+      "title": "Tool Repair"
+    },
+    {
+      "icon": "fa-solid fa-gears",
+      "title": "Spare Parts"
+    },
+    {
+      "icon": "fa-solid fa-truck-fast",
+      "title": "Fast Delivery"
+    },
+    {
+      "icon": "fa-solid fa-headset",
+      "title": "Support"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Bosch 18V Cordless Drill",
+      "location": "Kasoa",
+      "price": 1250.0,
+      "specs": "18V • 2 batteries • 13mm chuck",
+      "image": "/static/uploads/9966a7a0f8014f179f9ef2ea16a024d6.jpg"
+    },
+    {
+      "id": 2,
+      "name": "Makita 900W Angle Grinder",
+      "location": "Tema",
+      "price": 890,
+      "specs": "900W • 115mm disc • 11,000 rpm",
+      "image": ""
+    },
+    {
+      "id": 3,
+      "name": "108-Piece Hand Tool Kit",
+      "location": "Kumasi",
+      "price": 640,
+      "specs": "108 pcs • Chrome vanadium • Case",
+      "image": ""
+    },
+    {
+      "id": 4,
+      "name": "Inverter Welding Machine 200A",
+      "location": "Accra",
+      "price": 2150,
+      "specs": "200A • 220V • IGBT",
+      "image": ""
+    },
+    {
+      "id": 5,
+      "name": "50L Air Compressor 2HP",
+      "location": "Spintex",
+      "price": 1780,
+      "specs": "50L • 2HP • 8 bar",
+      "image": ""
+    },
+    {
+      "id": 6,
+      "name": "High-Pressure Washer 150 Bar",
+      "location": "Kumasi",
+      "price": 2450,
+      "specs": "150 bar • 2200W • 8m hose",
+      "image": ""
+    },
+    {
+      "id": 7,
+      "name": "DeWalt Circular Saw 1400W",
+      "location": "Accra",
+      "price": 1650,
+      "specs": "1400W • 185mm blade • 5,200 rpm",
+      "image": ""
+    },
+    {
+      "id": 8,
+      "name": "Heavy-Duty Socket Set 40pc",
+      "location": "Tema",
+      "price": 480,
+      "specs": "40 pcs • 1/2 inch drive • CR-V",
+      "image": ""
+    },
+    {
+      "id": 9,
+      "name": "Rotary Hammer Drill 850W",
+      "location": "Accra",
+      "price": 1980,
+      "specs": "850W • SDS-Plus • 3 modes",
+      "image": ""
+    },
+    {
+      "id": 10,
+      "name": "Bench Grinder 6-inch 350W",
+      "location": "Kumasi",
+      "price": 720,
+      "specs": "350W • 6 inch wheel • 2,950 rpm",
+      "image": ""
+    },
+    {
+      "id": 11,
+      "name": "Portable Tire Inflator 12V",
+      "location": "Spintex",
+      "price": 340,
+      "specs": "12V • 150 PSI • Digital",
+      "image": ""
+    },
+    {
+      "id": 12,
+      "name": "Industrial Tool Chest 7-Drawer",
+      "location": "Accra",
+      "price": 2890,
+      "specs": "7 drawers • Steel • Lockable",
+      "image": ""
+    },
+    {
+      "id": 13,
+      "name": "Cordless Impact Driver 20V",
+      "location": "Tema",
+      "price": 1320,
+      "specs": "20V • 180Nm • Brushless",
+      "image": ""
+    },
+    {
+      "id": 14,
+      "name": "Laser Distance Meter 40m",
+      "location": "Accra",
+      "price": 410,
+      "specs": "40m • ±2mm • Backlit LCD",
+      "image": ""
+    },
+    {
+      "id": 15,
+      "name": "Tile Cutter 800mm Manual",
+      "location": "Kumasi",
+      "price": 890,
+      "specs": "800mm • Manual • Carbide wheel",
+      "image": ""
+    },
+    {
+      "id": 16,
+      "name": "Generator 3.5KVA Petrol",
+      "location": "Accra",
+      "price": 4200,
+      "specs": "3.5KVA • Petrol • Electric start",
+      "image": ""
+    },
+    {
+      "id": 17,
+      "name": "SDS Max Demolition Hammer",
+      "location": "Tema",
+      "price": 3480,
+      "specs": "1500W • SDS-Max • 25J",
+      "image": ""
+    },
+    {
+      "id": 18,
+      "name": "Spray Gun HVLP Kit",
+      "location": "Spintex",
+      "price": 560,
+      "specs": "HVLP • 1.4mm nozzle • 600cc",
+      "image": ""
+    },
+    {
+      "id": 19,
+      "name": "Wet/Dry Vacuum 30L 1400W",
+      "location": "Accra",
+      "price": 1180,
+      "specs": "30L • 1400W • 2-stage",
+      "image": ""
+    }
+  ],
+  "comments": []
+}
