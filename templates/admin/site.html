@@ -1,0 +1,240 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Site Content — Admin{% endblock %}
+
+{% block admin_content %}
+<h1 class="admin-title">Site Content</h1>
+<p class="admin-sub">Edit all the text and images shown across the site.</p>
+
+<form method="POST" enctype="multipart/form-data" class="admin-form">
+
+  <!-- ============================================================
+       GENERAL
+       ============================================================ -->
+  <h2 class="form-section-title">General</h2>
+
+  <div class="form-group">
+    <label>Page Title (browser tab)</label>
+    <input type="text" name="page_title"
+           value="{{ site.page_title or 'Advance Tools & Spare Parts Hub' }}">
+    <p class="form-hint">Shows in the browser tab and search engines.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Brand Name (shown in footer)</label>
+    <input type="text" name="brand_name"
+           value="{{ site.brand_name or 'Advance Tools & Spare Parts Hub' }}">
+  </div>
+
+  <!-- Base logo upload -->
+  <div class="form-group">
+    <label>Base Logo (header logo)</label>
+
+    <div class="image-upload">
+      <div class="image-preview">
+        {% if site.base_logo %}
+          <img id="previewImg" src="{{ site.base_logo }}" alt="Logo">
+          <div class="image-placeholder" id="imagePlaceholder" style="display:none;">
+            <i class="fa-solid fa-image"></i>
+            <span>No image</span>
+          </div>
+        {% else %}
+          <img id="previewImg" src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo">
+          <div class="image-placeholder" id="imagePlaceholder" style="display:none;">
+            <i class="fa-solid fa-image"></i>
+            <span>No image</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="image-controls">
+        <div class="upload-actions">
+          <label for="baseLogoGallery" class="admin-btn secondary upload-btn">
+            <i class="fa-solid fa-folder-open"></i> From Gallery
+          </label>
+          <input type="file" id="baseLogoGallery" name="base_logo_file"
+                 accept="image/*" hidden>
+
+          <label for="baseLogoCamera" class="admin-btn secondary upload-btn">
+            <i class="fa-solid fa-camera"></i> Take Photo
+          </label>
+          <input type="file" id="baseLogoCamera" name="base_logo_camera"
+                 accept="image/*" capture="environment" hidden>
+        </div>
+
+        <p class="form-hint">Leave empty to keep the existing logo.</p>
+
+        <div class="form-group" style="margin-top:10px;">
+          <label>…or paste Logo URL</label>
+          <input type="text" name="base_logo" id="baseLogoUrl"
+                 value="{{ site.base_logo if site.base_logo and not site.base_logo.startswith('/static/uploads/') else '' }}"
+                 placeholder="https://example.com/logo.jpg">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       HERO
+       ============================================================ -->
+  <h2 class="form-section-title">Hero Section</h2>
+
+  <div class="form-group">
+    <label>Hero Kicker (small text above title)</label>
+    <input type="text" name="hero_kicker"
+           value="{{ site.hero_kicker or 'WELCOME TO' }}">
+  </div>
+
+  <div class="form-group">
+    <label>Hero Title — Line 1</label>
+    <input type="text" name="hero_title_line1"
+           value="{{ site.hero_title_line1 or 'Advance {gold}Tools{/gold}' }}">
+    <p class="form-hint">
+      Use <code>{gold}...{/gold}</code> to colour a word yellow.
+      Example: <code>Advance {gold}Tools{/gold}</code>
+    </p>
+  </div>
+
+  <div class="form-group">
+    <label>Hero Title — Line 2</label>
+    <input type="text" name="hero_title_line2"
+           value="{{ site.hero_title_line2 or '& Spare Parts Hub' }}">
+  </div>
+
+  <div class="form-group">
+    <label>Hero Subtitle</label>
+    <textarea name="hero_sub" rows="2">{{ site.hero_sub or 'Quality tools, spare parts & hardware — delivered across Ghana.' }}</textarea>
+  </div>
+
+  <!-- ============================================================
+       SECTION HEADINGS
+       ============================================================ -->
+  <h2 class="form-section-title">Section Headings</h2>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Services Heading</label>
+      <input type="text" name="services_heading"
+             value="{{ site.services_heading or 'Our Services' }}">
+    </div>
+    <div class="form-group">
+      <label>Products Heading</label>
+      <input type="text" name="products_heading"
+             value="{{ site.products_heading or 'Tools We Sell' }}">
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CONTACT
+       ============================================================ -->
+  <h2 class="form-section-title">Contact</h2>
+
+  <div class="form-group">
+    <label>Phone Number (displayed on site)</label>
+    <input type="text" name="info_phone"
+           value="{{ site.info_phone or '0593652536' }}"
+           placeholder="e.g. 0593652536">
+  </div>
+
+  <div class="form-group">
+    <label>WhatsApp Number (used for Chat + orders)</label>
+    <input type="text" name="info_whatsapp"
+           value="{{ site.info_whatsapp or '233593652536' }}"
+           placeholder="e.g. 233593652536">
+    <p class="form-hint">
+      International format: country code + number, no spaces or +.
+      Example: <code>233593652536</code>
+    </p>
+  </div>
+
+  <!-- ============================================================
+       LOCATION
+       ============================================================ -->
+  <h2 class="form-section-title">Location</h2>
+
+  <div class="form-group">
+    <label>Business Location</label>
+    <input type="text" name="info_location"
+           value="{{ site.info_location or 'Kasoa Oklu Nkwanta, Off Bawjiase Road' }}"
+           placeholder="e.g. Kasoa Oklu Nkwanta, Off Bawjiase Road">
+    <p class="form-hint">
+      Use <code>&lt;br&gt;</code> for line breaks if you want multiple lines.
+    </p>
+  </div>
+
+  <!-- ============================================================
+       SLOGAN
+       ============================================================ -->
+  <h2 class="form-section-title">Slogan</h2>
+
+  <div class="form-group">
+    <label>Business Slogan</label>
+    <input type="text" name="info_slogan"
+           value="{{ site.info_slogan or 'Your trusted partner for tools & spare parts.' }}"
+           placeholder="Your trusted partner for tools & spare parts.">
+  </div>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <h2 class="form-section-title">Footer</h2>
+
+  <div class="form-group">
+    <label>Footer Brand Blurb</label>
+    <textarea name="footer_blurb" rows="5">{{ site.footer_blurb or 'We sell all kinds of tools — power tools, hand tools, hardware and industrial equipment — and we stock genuine spare parts for every brand we carry. Beyond sales, we offer professional fabrication, servicing and repair, plus reliable doorstep delivery across Ghana.' }}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label>Developer Credit</label>
+    <input type="text" name="footer_dev"
+           value="{{ site.footer_dev or 'Developed by Ophyser — 0240044138' }}">
+  </div>
+
+  <!-- ============================================================
+       ACTIONS
+       ============================================================ -->
+  <div class="form-actions">
+    <button type="submit" class="admin-btn">
+      <i class="fa-solid fa-check"></i> Save All Changes
+    </button>
+  </div>
+
+</form>
+
+<script>
+  // Live preview for base logo
+  const baseLogoGallery = document.getElementById('baseLogoGallery');
+  const baseLogoCamera  = document.getElementById('baseLogoCamera');
+  const baseLogoUrl     = document.getElementById('baseLogoUrl');
+  const previewImg      = document.getElementById('previewImg');
+  const placeholder     = document.getElementById('imagePlaceholder');
+
+  function showPreview(src) {
+    if (!previewImg) return;
+    previewImg.src = src;
+    previewImg.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+  }
+
+  function handleFile(input, otherInput) {
+    if (!input) return;
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (otherInput) otherInput.value = '';
+      const reader = new FileReader();
+      reader.onload = (ev) => showPreview(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  handleFile(baseLogoGallery, baseLogoCamera);
+  handleFile(baseLogoCamera, baseLogoGallery);
+
+  if (baseLogoUrl) {
+    baseLogoUrl.addEventListener('input', () => {
+      const v = baseLogoUrl.value.trim();
+      if (v) showPreview(v);
+    });
+  }
+</script>
+{% endblock %}

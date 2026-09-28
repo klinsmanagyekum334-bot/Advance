@@ -1,0 +1,183 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Edit' if tool else 'Add' }} Tool — Admin{% endblock %}
+
+{% block admin_content %}
+<h1 class="admin-title">{{ 'Edit' if tool else 'Add' }} Tool</h1>
+<p class="admin-sub">{{ 'Update the details below.' if tool else 'Fill in the tool details.' }}</p>
+
+<form method="POST" enctype="multipart/form-data" class="admin-form">
+
+  <!-- ============ BASIC INFO ============ -->
+  <div class="form-group">
+    <label>Tool Name *</label>
+    <input type="text" name="name" value="{{ tool.name if tool else '' }}"
+           placeholder="e.g. Bosch 18V Cordless Drill" required>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Location *</label>
+      <input type="text" name="location" value="{{ tool.location if tool else '' }}"
+             placeholder="e.g. Accra" required>
+    </div>
+    <div class="form-group">
+      <label>Price (GHS) *</label>
+      <input type="number" step="0.01" name="price"
+             value="{{ tool.price if tool else '' }}"
+             placeholder="e.g. 1250" required>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Specs *</label>
+    <input type="text" name="specs" value="{{ tool.specs if tool else '' }}"
+           placeholder="e.g. 18V • 2 batteries • 13mm chuck" required>
+  </div>
+
+  <!-- ============ CATEGORY ============ -->
+  <div class="form-group">
+    <label>Category</label>
+    <select name="category_id" class="form-select">
+      <option value="">— No category (will only show in Featured / Shop) —</option>
+      {% for c in categories %}
+      <option value="{{ c.id }}"
+              {% if tool and tool.category_id == c.id %}selected{% endif %}>
+        {{ c.name }}
+      </option>
+      {% endfor %}
+    </select>
+    <p class="form-hint">
+      Assign this tool to a category so it appears under that section.
+    </p>
+  </div>
+
+  <!-- ============ FEATURED ============ -->
+  <div class="form-group">
+    <label class="checkbox-label">
+      <input type="checkbox" name="featured"
+             {% if tool and tool.featured %}checked{% endif %}>
+      <span>Mark as Featured</span>
+    </label>
+    <p class="form-hint">
+      Featured tools appear on the homepage Featured Picks and in the hero slider.
+    </p>
+  </div>
+
+  <!-- ============ PHONE (for featured advertisers) ============ -->
+  <div class="form-group">
+    <label>WhatsApp Phone Number (optional)</label>
+    <input type="text" name="phone"
+           value="{{ tool.phone if tool and tool.phone else '' }}"
+           placeholder="e.g. 233551234567">
+    <p class="form-hint">
+      Only needed if this is a <strong>featured</strong> ad. Leave blank to use the site's default number.
+      <br>Format: country code + number, no spaces (e.g. <code>233551234567</code>).
+    </p>
+  </div>
+
+  <!-- ============ IMAGE ============ -->
+  <div class="form-group">
+    <label>Tool Image</label>
+
+    <div class="image-upload">
+
+      <!-- Preview -->
+      <div class="image-preview">
+        {% if tool and tool.image %}
+          <img id="previewImg" src="{{ tool.image }}" alt="Preview">
+          <div class="image-placeholder" id="imagePlaceholder" style="display:none;">
+            <i class="fa-solid fa-image"></i>
+            <span>No image selected</span>
+          </div>
+        {% else %}
+          <img id="previewImg" src="" alt="" style="display:none;">
+          <div class="image-placeholder" id="imagePlaceholder">
+            <i class="fa-solid fa-image"></i>
+            <span>No image selected</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Controls -->
+      <div class="image-controls">
+
+        <div class="upload-actions">
+          <label for="imageGallery" class="admin-btn secondary upload-btn">
+            <i class="fa-solid fa-folder-open"></i> From Gallery
+          </label>
+          <input type="file" id="imageGallery" name="image_file"
+                 accept="image/*" hidden>
+
+          <label for="imageCamera" class="admin-btn secondary upload-btn">
+            <i class="fa-solid fa-camera"></i> Take Photo
+          </label>
+          <input type="file" id="imageCamera" name="image_file_camera"
+                 accept="image/*" capture="environment" hidden>
+        </div>
+
+        <p class="form-hint">
+          Pick a photo from your gallery, take one, or paste a URL below.
+          If you leave everything empty, a placeholder is used.
+        </p>
+
+        <div class="form-group" style="margin-top:12px;">
+          <label>…or paste an Image URL</label>
+          <input type="text" name="image" id="imageUrl"
+                 value="{{ tool.image if tool and tool.image and not tool.image.startswith('/static/uploads/') else '' }}"
+                 placeholder="https://example.com/image.jpg">
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ACTIONS ============ -->
+  <div class="form-actions">
+    <a href="{{ url_for('admin_tools') }}" class="admin-btn secondary">Cancel</a>
+    <button type="submit" class="admin-btn">
+      {{ 'Save Changes' if tool else 'Add Tool' }}
+    </button>
+  </div>
+
+</form>
+
+<script>
+  const galleryInput = document.getElementById('imageGallery');
+  const cameraInput  = document.getElementById('imageCamera');
+  const urlInput     = document.getElementById('imageUrl');
+  const previewImg   = document.getElementById('previewImg');
+  const placeholder  = document.getElementById('imagePlaceholder');
+
+  function showPreview(src) {
+    previewImg.src = src;
+    previewImg.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+  }
+
+  function handleFile(input) {
+    if (!input) return;
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Clear the other input so only one is submitted
+      if (input === galleryInput && cameraInput) cameraInput.value = '';
+      if (input === cameraInput  && galleryInput) galleryInput.value = '';
+
+      const reader = new FileReader();
+      reader.onload = (ev) => showPreview(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  handleFile(galleryInput);
+  handleFile(cameraInput);
+
+  if (urlInput) {
+    urlInput.addEventListener('input', () => {
+      const url = urlInput.value.trim();
+      if (url) showPreview(url);
+    });
+  }
+</script>
+{% endblock %}

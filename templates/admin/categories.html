@@ -1,0 +1,291 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Categories — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+  <div>
+    <h1 class="admin-title">Categories</h1>
+    <p class="admin-sub">{{ categories|length }} categor{{ 'y' if categories|length == 1 else 'ies' }} on the site</p>
+  </div>
+  <button type="button" class="admin-btn" id="toggleAddForm">
+    <i class="fa-solid fa-plus"></i> Add Category
+  </button>
+</div>
+
+<!-- ============================================================
+     ADD NEW CATEGORY (hidden by default)
+     ============================================================ -->
+<div class="admin-panel add-panel" id="addPanel" style="display:none;">
+  <h2>New Category</h2>
+
+  <form method="POST" action="{{ url_for('admin_category_new') }}"
+        enctype="multipart/form-data" class="admin-form" style="max-width:100%;">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Category Name *</label>
+        <input type="text" name="name" id="newName"
+               placeholder="e.g. Power Tools" required>
+      </div>
+      <div class="form-group">
+        <label>Slug (URL) *</label>
+        <input type="text" name="slug" id="newSlug"
+               placeholder="e.g. power-tools" required>
+        <p class="form-hint">Lowercase, hyphens instead of spaces.</p>
+      </div>
+    </div>
+
+    <!-- Image -->
+    <div class="form-group">
+      <label>Category Image</label>
+
+      <div class="image-upload">
+        <div class="image-preview">
+          <img id="newPreviewImg" src="" alt="" style="display:none;">
+          <div class="image-placeholder" id="newPlaceholder">
+            <i class="fa-solid fa-image"></i>
+            <span>No image</span>
+          </div>
+        </div>
+
+        <div class="image-controls">
+          <div class="upload-actions">
+            <label for="newImageGallery" class="admin-btn secondary upload-btn">
+              <i class="fa-solid fa-folder-open"></i> From Gallery
+            </label>
+            <input type="file" id="newImageGallery" name="image_file"
+                   accept="image/*" hidden>
+
+            <label for="newImageCamera" class="admin-btn secondary upload-btn">
+              <i class="fa-solid fa-camera"></i> Take Photo
+            </label>
+            <input type="file" id="newImageCamera" name="image_file_camera"
+                   accept="image/*" capture="environment" hidden>
+          </div>
+
+          <div class="form-group" style="margin-top:10px;">
+            <label>…or paste Image URL</label>
+            <input type="text" name="image" id="newImageUrl"
+                   placeholder="https://example.com/image.jpg">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="admin-btn secondary" id="cancelAdd">Cancel</button>
+      <button type="submit" class="admin-btn">Save Category</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============================================================
+     EXISTING CATEGORIES
+     ============================================================ -->
+{% if categories %}
+
+<div class="categories-admin-grid">
+
+  {% for c in categories %}
+  <div class="cat-admin-card">
+
+    <!-- Image -->
+    <div class="cat-admin-image">
+      {% if c.image %}
+        <img src="{{ c.image }}" alt="{{ c.name }}">
+      {% else %}
+        <div class="category-placeholder">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Name + slug -->
+    <div class="cat-admin-info">
+      <h3>{{ c.name }}</h3>
+      <p class="cat-slug">/{{ c.slug }}</p>
+
+      {% set count = c.tool_count if c.tool_count is defined else 0 %}
+    </div>
+
+    <!-- Actions -->
+    <div class="cat-admin-actions">
+      <button type="button" class="icon-action edit"
+              onclick="toggleEdit({{ c.id }})" title="Edit">
+        <i class="fa-solid fa-pen"></i>
+      </button>
+
+      <form method="POST" action="{{ url_for('admin_category_delete', cat_id=c.id) }}"
+            onsubmit="return confirm('Delete this category? Tools inside will become uncategorised.');"
+            style="display:inline;">
+        <button type="submit" class="icon-action delete" title="Delete">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Edit form (hidden) -->
+    <div class="cat-edit-panel" id="edit-{{ c.id }}" style="display:none;">
+
+      <form method="POST" action="{{ url_for('admin_category_edit', cat_id=c.id) }}"
+            enctype="multipart/form-data">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" name="name" value="{{ c.name }}" required>
+          </div>
+          <div class="form-group">
+            <label>Slug</label>
+            <input type="text" name="slug" value="{{ c.slug }}" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Replace Image</label>
+
+          <div class="image-upload">
+            <div class="image-preview">
+              {% if c.image %}
+                <img id="editPreview{{ c.id }}" src="{{ c.image }}" alt="">
+              {% else %}
+                <img id="editPreview{{ c.id }}" src="" alt="" style="display:none;">
+              {% endif %}
+            </div>
+
+            <div class="image-controls">
+              <div class="upload-actions">
+                <label for="editGallery{{ c.id }}" class="admin-btn secondary upload-btn">
+                  <i class="fa-solid fa-folder-open"></i> From Gallery
+                </label>
+                <input type="file" id="editGallery{{ c.id }}" name="image_file"
+                       accept="image/*" hidden>
+
+                <label for="editCamera{{ c.id }}" class="admin-btn secondary upload-btn">
+                  <i class="fa-solid fa-camera"></i> Take Photo
+                </label>
+                <input type="file" id="editCamera{{ c.id }}" name="image_file_camera"
+                       accept="image/*" capture="environment" hidden>
+              </div>
+
+              <div class="form-group" style="margin-top:10px;">
+                <label>…or change Image URL</label>
+                <input type="text" name="image"
+                       value="{{ c.image if c.image and not c.image.startswith('/static/uploads/') else '' }}"
+                       placeholder="https://example.com/image.jpg">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="admin-btn secondary"
+                  onclick="toggleEdit({{ c.id }})">Cancel</button>
+          <button type="submit" class="admin-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+  {% endfor %}
+
+</div>
+
+{% else %}
+<div class="admin-empty">
+  <p>No categories yet. Click <strong>Add Category</strong> to create your first one.</p>
+</div>
+{% endif %}
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script>
+  // --- Toggle Add form ---
+  const addPanel    = document.getElementById('addPanel');
+  const toggleBtn   = document.getElementById('toggleAddForm');
+  const cancelBtn   = document.getElementById('cancelAdd');
+
+  toggleBtn.addEventListener('click', () => {
+    const open = addPanel.style.display !== 'none';
+    addPanel.style.display = open ? 'none' : 'block';
+    if (!open) addPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  cancelBtn.addEventListener('click', () => addPanel.style.display = 'none');
+
+  // --- Auto-generate slug from name ---
+  const nameInput = document.getElementById('newName');
+  const slugInput = document.getElementById('newSlug');
+  nameInput.addEventListener('input', () => {
+    if (slugInput.dataset.touched === '1') return;
+    slugInput.value = nameInput.value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-');
+  });
+  slugInput.addEventListener('input', () => slugInput.dataset.touched = '1');
+
+  // --- Preview new image ---
+  const newPreview    = document.getElementById('newPreviewImg');
+  const newPlaceholder= document.getElementById('newPlaceholder');
+  const newGallery    = document.getElementById('newImageGallery');
+  const newCamera     = document.getElementById('newImageCamera');
+  const newUrl        = document.getElementById('newImageUrl');
+
+  function attachPreview(input, imgEl, placeholderEl) {
+    if (!input) return;
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        imgEl.src = ev.target.result;
+        imgEl.style.display = 'block';
+        if (placeholderEl) placeholderEl.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  attachPreview(newGallery, newPreview, newPlaceholder);
+  attachPreview(newCamera, newPreview, newPlaceholder);
+
+  if (newUrl) {
+    newUrl.addEventListener('input', () => {
+      const v = newUrl.value.trim();
+      if (v) {
+        newPreview.src = v;
+        newPreview.style.display = 'block';
+        if (newPlaceholder) newPlaceholder.style.display = 'none';
+      }
+    });
+  }
+
+  // --- Toggle edit form ---
+  function toggleEdit(id) {
+    const el = document.getElementById('edit-' + id);
+    if (!el) return;
+    el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+  }
+
+  // --- Attach preview to all edit forms ---
+  document.querySelectorAll('[id^="editGallery"], [id^="editCamera"]').forEach(input => {
+    const match = input.id.match(/\d+/);
+    if (!match) return;
+    const catId = match[0];
+    const img = document.getElementById('editPreview' + catId);
+    if (!img) return;
+
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        img.src = ev.target.result;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+</script>
+{% endblock %}

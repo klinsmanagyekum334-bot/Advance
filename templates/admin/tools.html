@@ -1,0 +1,117 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Tools — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+  <div>
+    <h1 class="admin-title">Tools</h1>
+    <p class="admin-sub">{{ products|length }} tool{{ 's' if products|length != 1 }} in catalog</p>
+  </div>
+  <a href="{{ url_for('admin_tool_new') }}" class="admin-btn">
+    <i class="fa-solid fa-plus"></i> Add Tool
+  </a>
+</div>
+
+{% if products %}
+
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th style="width:60px;">Image</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Location</th>
+        <th>Price</th>
+        <th style="width:90px;">Featured</th>
+        <th style="width:140px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <!-- Image thumbnail -->
+        <td>
+          {% if p.image %}
+            <div class="tool-thumb">
+              <img src="{{ p.image }}" alt="{{ p.name }}">
+            </div>
+          {% else %}
+            <div class="tool-thumb empty">
+              <i class="fa-solid fa-image"></i>
+            </div>
+          {% endif %}
+        </td>
+
+        <!-- Name + specs -->
+        <td>
+          <div class="tool-name">{{ p.name }}</div>
+          <div class="tool-specs">{{ p.specs }}</div>
+          {% if p.phone %}
+            <div class="tool-phone"><i class="fa-brands fa-whatsapp"></i> {{ p.phone }}</div>
+          {% endif %}
+        </td>
+
+        <!-- Category -->
+        <td>
+          {% set matched = categories | selectattr("id", "equalto", p.category_id) | list %}
+          {% if matched and matched[0] %}
+            <span class="pill pill-category">{{ matched[0].name }}</span>
+          {% else %}
+            <span class="pill pill-muted">—</span>
+          {% endif %}
+        </td>
+
+        <!-- Location -->
+        <td>{{ p.location or "—" }}</td>
+
+        <!-- Price -->
+        <td>
+          <strong>GHS {{ "{:,}".format(p.price|int) }}</strong>
+        </td>
+
+        <!-- Featured -->
+        <td>
+          {% if p.featured %}
+            <span class="pill pill-featured">
+              <i class="fa-solid fa-star"></i> Yes
+            </span>
+          {% else %}
+            <span class="pill pill-muted">No</span>
+          {% endif %}
+        </td>
+
+        <!-- Actions -->
+        <td class="actions">
+          <a href="{{ url_for('admin_tool_edit', tool_id=p.id) }}"
+             class="icon-action edit" title="Edit">
+            <i class="fa-solid fa-pen"></i>
+          </a>
+
+          <form method="POST" action="{{ url_for('admin_tool_delete', tool_id=p.id) }}"
+                onsubmit="return confirm('Delete this tool? This cannot be undone.');"
+                style="display:inline;">
+            <button type="submit" class="icon-action delete" title="Delete">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+
+<div class="admin-empty">
+  <i class="fa-solid fa-toolbox"></i>
+  <h3>No tools yet</h3>
+  <p>Click <strong>Add Tool</strong> to create your first one.</p>
+  <a href="{{ url_for('admin_tool_new') }}" class="admin-btn" style="margin-top:14px;">
+    <i class="fa-solid fa-plus"></i> Add Tool
+  </a>
+</div>
+
+{% endif %}
+{% endblock %}

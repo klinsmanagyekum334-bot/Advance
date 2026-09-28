@@ -1,0 +1,66 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Services — Admin{% endblock %}
+
+{% block admin_content %}
+<h1 class="admin-title">Services</h1>
+<p class="admin-sub">Edit icons and titles. Use any Font Awesome class (e.g. <code>fa-solid fa-industry</code>).</p>
+
+<form method="POST" class="admin-form">
+
+  <div id="servicesList">
+    {% for s in services %}
+    <div class="service-row">
+      <div class="form-group icon-group">
+        <label>Icon</label>
+        <input type="text" name="icon" value="{{ s.icon }}">
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" name="title" value="{{ s.title }}" required>
+      </div>
+      <button type="button" class="icon-action delete remove-row" title="Remove">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button type="button" id="addService" class="admin-btn secondary">
+    <i class="fa-solid fa-plus"></i> Add Service
+  </button>
+
+  <div class="form-actions" style="margin-top:24px;">
+    <button type="submit" class="admin-btn">Save Services</button>
+  </div>
+
+</form>
+
+<script>
+  const list = document.getElementById('servicesList');
+  const addBtn = document.getElementById('addService');
+
+  addBtn.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'service-row';
+    row.innerHTML = `
+      <div class="form-group icon-group">
+        <label>Icon</label>
+        <input type="text" name="icon" value="fa-solid fa-star">
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" name="title" placeholder="New service" required>
+      </div>
+      <button type="button" class="icon-action delete remove-row" title="Remove">
+        <i class="fa-solid fa-xmark"></i>
+      </button>`;
+    list.appendChild(row);
+  });
+
+  list.addEventListener('click', (e) => {
+    if (e.target.closest('.remove-row')) {
+      e.target.closest('.service-row').remove();
+    }
+  });
+</script>
+{% endblock %}

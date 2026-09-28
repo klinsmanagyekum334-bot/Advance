@@ -1,0 +1,106 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Dashboard — Admin{% endblock %}
+
+{% block admin_content %}
+
+<h1 class="admin-title">Dashboard</h1>
+<p class="admin-sub">Welcome back. Manage everything from here.</p>
+
+<!-- ============================================================
+     STAT CARDS
+     ============================================================ -->
+<div class="stat-grid">
+
+  <a href="{{ url_for('admin_tools') }}" class="stat-card">
+    <i class="fa-solid fa-toolbox"></i>
+    <div>
+      <p class="stat-number">{{ product_count }}</p>
+      <p class="stat-label">Total Tools</p>
+    </div>
+  </a>
+
+  <a href="{{ url_for('admin_featured') }}" class="stat-card featured-stat">
+    <i class="fa-solid fa-star"></i>
+    <div>
+      <p class="stat-number">{{ featured_count }}</p>
+      <p class="stat-label">Featured</p>
+    </div>
+  </a>
+
+  <a href="{{ url_for('admin_categories') }}" class="stat-card">
+    <i class="fa-solid fa-list-check"></i>
+    <div>
+      <p class="stat-number">{{ category_count }}</p>
+      <p class="stat-label">Categories</p>
+    </div>
+  </a>
+
+  <a href="{{ url_for('admin_comments') }}" class="stat-card">
+    <i class="fa-solid fa-comments"></i>
+    <div>
+      <p class="stat-number">{{ comment_count }}</p>
+      <p class="stat-label">Visitor Comments</p>
+    </div>
+  </a>
+
+  <a href="{{ url_for('admin_services') }}" class="stat-card">
+    <i class="fa-solid fa-screwdriver-wrench"></i>
+    <div>
+      <p class="stat-number">{{ service_count }}</p>
+      <p class="stat-label">Services</p>
+    </div>
+  </a>
+
+  <a href="{{ url_for('admin_site') }}" class="stat-card">
+    <i class="fa-solid fa-pen-to-square"></i>
+    <div>
+      <p class="stat-number">Edit</p>
+      <p class="stat-label">Site Content</p>
+    </div>
+  </a>
+
+</div>
+
+<!-- ============================================================
+     QUICK ACTIONS
+     ============================================================ -->
+<div class="admin-panel">
+  <h2>Quick Actions</h2>
+
+  <div class="quick-actions">
+
+    <a href="{{ url_for('admin_tool_new') }}" class="quick-action">
+      <i class="fa-solid fa-plus"></i>
+      <span>Add Tool</span>
+    </a>
+
+    <a href="{{ url_for('admin_categories') }}" class="quick-action">
+      <i class="fa-solid fa-folder-plus"></i>
+      <span>Add Category</span>
+    </a>
+
+    <a href="{{ url_for('admin_site') }}" class="quick-action">
+      <i class="fa-solid fa-pen"></i>
+      <span>Edit Site</span>
+    </a>
+
+    <a href="{{ url_for('index') }}" target="_blank" class="quick-action">
+      <i class="fa-solid fa-eye"></i>
+      <span>View Site</span>
+    </a>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     CHANGE PASSWORD
+     ============================================================ -->
+<div class="admin-panel">
+  <h2>Change Admin Password</h2>
+  <p class="admin-panel-sub">
+    Password is currently set in <code>app.py</code>. To change it,
+    edit the <code>ADMIN_PASSWORD</code> constant and restart the app.
+  </p>
+</div>
+
+{% endblock %}
