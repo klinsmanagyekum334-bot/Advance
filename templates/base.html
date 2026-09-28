@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ site.page_title or "Advance Tools & Spare Parts Hub" }}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="site-header">
+
+  <div class="header-top">
+    <div class="header-top-inner">
+
+      <a href="{{ url_for('index') }}" class="brand">
+        <img src="{{ site.base_logo or url_for('static', filename='img/logo.jpg') }}"
+             alt="Advance Tools"
+             class="brand-logo">
+        <div class="brand-text">
+          <span class="brand-line1">Advance <em>Tools</em></span>
+          <span class="brand-line2">&amp; Spare Parts Hub</span>
+          <span class="brand-tagline">Quality Tools. Genuine Parts. Better Solutions.</span>
+        </div>
+      </a>
+
+      <div class="header-icons">
+        <a href="#" class="hdr-icon cart-icon" aria-label="Cart"
+           onclick="alert('Cart is under development. Please order via WhatsApp for now.'); return false;">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="cart-badge">0</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="header-search">
+    <div class="header-search-inner">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" id="headerSearchInput"
+             placeholder="Search tools, spare parts, equipment...">
+      <button class="search-btn" id="headerSearchBtn">Search</button>
+    </div>
+  </div>
+
+  <nav class="nav-tabs">
+    <div class="nav-tabs-inner">
+
+      <a href="{{ url_for('index') }}"
+         class="nav-tab {% if not active_category %}active{% endif %}">
+        <i class="fa-solid fa-house"></i> Home
+      </a>
+
+      {% if categories %}
+        {% for c in categories[:4] %}
+        <a href="{{ url_for('index', category=c.slug) }}"
+           class="nav-tab {% if active_category and active_category.id == c.id %}active{% endif %}">
+          <i class="fa-solid fa-screwdriver-wrench"></i> {{ c.name }}
+        </a>
+        {% endfor %}
+      {% endif %}
+
+      <button class="nav-tab nav-more" type="button"
+              onclick="document.getElementById('categories')?.scrollIntoView({behavior:'smooth'});">
+        <i class="fa-solid fa-bars"></i> More
+      </button>
+
+    </div>
+  </nav>
+
+</header>
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer" id="contact">
+  <div class="footer-inner">
+
+    <div class="footer-brand">
+      <h4>{{ site.brand_name or "Advance Tools & Spare Parts Hub" }}</h4>
+      <p>
+        {{ site.footer_blurb or "We sell all kinds of tools — power tools, hand tools, hardware and industrial equipment — and we stock genuine spare parts for every brand we carry. Beyond sales, we offer professional fabrication, servicing and repair, plus reliable doorstep delivery across Ghana." }}
+      </p>
+    </div>
+
+    <div class="footer-contact">
+      <h5 class="footer-contact-heading">Get in Touch</h5>
+
+      <p><i class="fa-solid fa-phone"></i>
+        <a href="tel:{{ site.info_phone or '0593652536' }}">{{ site.info_phone or "0593652536" }}</a>
+      </p>
+      <p><i class="fa-brands fa-whatsapp"></i>
+        <a href="https://wa.me/{{ site.info_whatsapp or '233593652536' }}" target="_blank">
+          Chat on WhatsApp
+        </a>
+      </p>
+      <p class="footer-location"><i class="fa-solid fa-location-dot"></i>
+        {{ (site.info_location or "Kasoa Oklu Nkwanta, Off Bawjiase Road") | safe }}
+      </p>
+      <p class="footer-slogan">
+        <i class="fa-solid fa-quote-left"></i>
+        {{ site.info_slogan or "Your trusted partner for tools & spare parts." }}
+      </p>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <p>&copy; 2026 Advance Tools &amp; Spare Parts Hub. All rights reserved.</p>
+    <p class="dev-credit">Developed by <strong>Ophyser</strong> — 0240044138</p>
+  </div>
+</footer>
+
+<nav class="bottom-nav">
+
+  <a href="{{ url_for('index') }}"
+     class="bottom-item {% if not active_category and request.endpoint == 'index' %}active{% endif %}">
+    <i class="fa-solid fa-house"></i>
+    <span>Home</span>
+  </a>
+
+  <a href="{{ url_for('shop_page') }}"
+     class="bottom-item {% if request.endpoint == 'shop_page' %}active{% endif %}">
+    <i class="fa-solid fa-store"></i>
+    <span>Shop</span>
+  </a>
+
+  <a href="https://wa.me/{{ site.info_whatsapp or '233593652536' }}"
+     target="_blank" class="bottom-item chat-item">
+    <i class="fa-brands fa-whatsapp"></i>
+    <span>Chat</span>
+  </a>
+
+</nav>
+
+<div class="search-overlay" id="searchOverlay" aria-hidden="true">
+  <div class="search-panel">
+
+    <div class="search-bar">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" id="searchInput" class="search-input"
+             placeholder="Search tools, spare parts, categories..." autocomplete="off">
+      <button class="search-close" id="closeSearch" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="search-results" id="searchResults">
+      <p class="search-hint">Start typing to search everything on the site…</p>
+    </div>
+
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
